@@ -16,7 +16,7 @@ class Routes
 
         // Verificar conexão
         $anonymous->base = static function () {
-            return '/';
+            return '';
         };
 
         // Conectar
