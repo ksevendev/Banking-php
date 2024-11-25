@@ -71,7 +71,7 @@ class Client
     public function __construct(string $apiKey = null, array $extras = null)
     {
         // Carrega o arquivo de configuração
-        $config = require __DIR__ . '/../config.php';
+        $config = require __DIR__ . '/config.php';
 
         // Define valores estáticos a partir da configuração
         self::$token = $config['token'] ?? '';

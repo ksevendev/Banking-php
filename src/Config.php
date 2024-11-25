@@ -4,7 +4,7 @@ return [
 
     'token' => 'ktuXDHrbK2uOCUJUBaYmiCczwcvud1Rd',
 
-    'base_url' => 'https://bank.test/api/',
+    'base_url' => 'http://bank.test/api/',
 
     'userAgent' => 'Seven',
 

@@ -1,5 +1,5 @@
 <?php
-namespace PagarMe\Exceptions;
+namespace Banking\Exceptions;
 
 class InvalidJsonException extends \Exception
 {
