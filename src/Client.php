@@ -10,6 +10,7 @@ use Banking\Endpoints\Manager;
 use Banking\Endpoints\User;
 use Banking\Endpoints\Finance;
 use Banking\Endpoints\Sell;
+use Banking\Endpoints\Setting;
 
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Exception\ClientException;
@@ -63,6 +64,11 @@ class Client
     private $sell;
 
     /**
+     * @var \Banking\Endpoints\Setting
+     */
+    private $setting;
+
+    /**
      * Construtor da classe Client
      *
      * @param string $apiKey
@@ -102,6 +108,7 @@ class Client
         $this->user = new User($this);
         $this->finance = new Finance($this);
         $this->sell = new Sell($this);
+        $this->setting = new Setting($this);
     }
 
     /**
@@ -202,6 +209,14 @@ class Client
     public function sell()
     {
         return $this->sell;
+    }
+
+    /**
+     * @return \Banking\Endpoints\Setting
+     */
+    public function setting()
+    {
+        return $this->setting;
     }
 
 }

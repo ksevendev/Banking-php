@@ -1,11 +1,18 @@
 <?php
 
-return [
+    $token = null; // "ktuXDHrbK2uOCUJUBaYmiCczwcvud1Rd";
+    $pathInitialize = __DIR__ . "/../../../initialize.php";
+    if (file_exists($pathInitialize)) {
+        require_once $pathInitialize;
+        $token = TOKEN;
+    }
 
-    'token' => 'ktuXDHrbK2uOCUJUBaYmiCczwcvud1Rd',
+    return [
 
-    'base_url' => 'http://bank.test/api/',
+        'token' => $token,
 
-    'userAgent' => 'Seven',
+        'base_url' => 'http://bank.test/api/',
 
-];
+        'userAgent' => 'Seven',
+
+    ];

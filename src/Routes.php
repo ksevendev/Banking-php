@@ -107,4 +107,19 @@ class Routes
         return $anonymous;
     }
 
+    /**
+     * @return \Banking\Anonymous
+     */
+    public static function setting()
+    {
+        $anonymous = new Anonymous();
+
+        // Obter vendas & vender
+        $anonymous->base = static function () {
+            return "settings/payment";
+        };
+
+        return $anonymous;
+    }
+
 }
