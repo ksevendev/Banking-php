@@ -78,58 +78,38 @@ class Client
     {
         // Carrega o arquivo de configuração
         $config = require __DIR__ . '/config.php';
-    
+
         // Define valores estáticos a partir da configuração
         self::$token = $config['token'] ?? '';
         self::$baseUri = $config['base_url'] ?? '';
         self::$bankingUserAgentHeader = $config['userAgent'] ?? 'Default-Banking-User-Agent';
-    
+
         $this->apiKey = $apiKey ?? self::$token;
-    
-        // A URL base será inicialmente configurada para HTTPS
-        $uri = self::$baseUri;
-        $httpsUri = str_replace("http://", "https://", $uri); // Tenta HTTPS
-    
-        // Inicializa as opções do HttpClient com a URL HTTPS
-        $options = [
-            'base_uri' => $httpsUri,
-            'verify' => false,
-        ];
-    
+
+        $options = ['base_uri' => self::$baseUri];
+
         if (!is_null($extras)) {
             $options = array_merge($options, $extras);
         }
-    
+
         $domain = $_SERVER['HTTP_HOST'];
         if ($domain) {
             $options['headers']['domain'] = $domain; 
         }
-    
-        // Configura o User-Agent
+
         $userAgent = isset($options['headers']['User-Agent']) ? $options['headers']['User-Agent'] : '';
+
         $options['headers']['User-Agent'] = $this->addUserAgentHeaders($userAgent);
         $options['headers']['X-Banking-User-Agent'] = self::$bankingUserAgentHeader;
-    
-        // Tenta inicializar o HttpClient com HTTPS
-        try {
-            $this->http = new HttpClient($options);
-            // Se funcionar com HTTPS, continue
-        } catch (\Exception $exception) {
-            // Se falhar com HTTPS, tenta com HTTP
-            $httpUri = str_replace("https://", "http://", $uri); // Altera para HTTP
-            $options['base_uri'] = $httpUri;  // Atualiza para HTTP
-    
-            // Tenta novamente com HTTP
-            $this->http = new HttpClient($options);
-        }
-    
-        // Inicializa os outros componentes
+
+        $this->http = new HttpClient($options);
+
         $this->manager = new Manager($this);
         $this->user = new User($this);
         $this->finance = new Finance($this);
         $this->sell = new Sell($this);
         $this->setting = new Setting($this);
-    }    
+    }
 
     /**
      * @param string $method
@@ -169,22 +149,6 @@ class Client
     public function getApiKey()
     {
         return $this->apiKey;
-    }
-
-    /**
-     * @return string
-     */
-    public function getUrl()
-    {
-        return str_replace("api/", "", self::$baseUri);
-    }
-
-    /**
-     * @return string
-     */
-    public function getUrlBase()
-    {
-        return self::$baseUri;
     }
 
     /**
