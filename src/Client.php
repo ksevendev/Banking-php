@@ -145,7 +145,7 @@ class Client
             // Se funcionar com HTTPS, continue
         } catch (\Exception $exception) {
             // Se falhar com HTTPS, tenta com HTTP
-            $httpUri = str_replace("https://", "http://", $uri); // Altera para HTTP
+            $httpUri = str_replace("https://", "http://", self::$baseUri); // Altera para HTTP
             $options['base_uri'] = $httpUri;  // Atualiza para HTTP
     
             // Tenta novamente com HTTP
