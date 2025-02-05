@@ -21,13 +21,16 @@ class Sell extends Endpoint
     }
 
     /**
+     * @param array $payload
+     *
      * @return \ArrayObject
      */
-    public function sell()
+    public function create(array $payload)
     {
         return $this->client->request(
             self::POST,
-            Routes::sell()->base()
+            Routes::sell()->base(),
+            ['json' => $payload]
         );
     }
 
@@ -41,6 +44,18 @@ class Sell extends Endpoint
         return $this->client->request(
             self::GET,
             Routes::sell()->getOrder($payload['id'])
+        );
+    }
+    
+    /**
+     * @return \ArrayObject
+     */
+    public function getOrders(array $payload)
+    {
+        return $this->client->request(
+            self::GET,
+            Routes::sell()->base(),
+            ['query' => $payload]
         );
     }
 

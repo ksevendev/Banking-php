@@ -16,6 +16,9 @@ use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Exception\ClientException;
 use Banking\Exceptions\InvalidJsonException;
 
+use Banking\Log\Logger;
+use Banking\Log\Handler\StreamHandler;
+
 class Client
 {
     /**
@@ -69,6 +72,11 @@ class Client
     private $setting;
 
     /**
+     * @var Logger
+     */
+    private $logger;
+
+    /**
      * Construtor da classe Client
      *
      * @param string $apiKey
@@ -76,25 +84,46 @@ class Client
      */
     public function __construct(string $apiKey = null, array $extras = null)
     {
-        // Carrega o arquivo de configuração
-        $config = require __DIR__ . '/config.php';
-    
+
+        // Configuração do Logger
+        $this->logger = new Logger('BankingClient');
+        $logFile = __DIR__ . '/logs/client.log'; // Caminho dentro da lib
+        $this->logger->pushHandler(new StreamHandler($logFile, Logger::DEBUG));
+
+        $this->logger->info('Client iniciado.');
+
+        // Carrega as configurações
+        //$config = require 'config.php';
+        $config = [ //require 'config.php';
+            'token' => $config['token'] ?? '',
+            'base_url' => 'https://bank.malipay.com.br/',
+            //'base_url' => 'http://bank.test/api/',
+            'userAgent' => 'Seven',
+        ];
+
         // Define valores estáticos a partir da configuração
         self::$token = $config['token'] ?? '';
-        self::$baseUri = $config['base_url'] ?? '';
+        self::$baseUri = rtrim($config['base_url'] ?? '', '/'); // Garante a barra no final
         self::$bankingUserAgentHeader = $config['userAgent'] ?? 'Default-Banking-User-Agent';
-    
-        $this->apiKey = $apiKey ?? self::$token;
-    
-        // A URL base será inicialmente configurada para HTTPS
-        $uri = self::$baseUri;
-        $httpsUri = str_replace("http://", "https://", $uri); // Tenta HTTPS
-    
-        // Inicializa as opções do HttpClient com a URL HTTPS
+
+        $this->apiKey = $apiKey ?: self::$token; // Se $apiKey for nulo, usa o token global
+
+        // Garante que a URL base comece com HTTPS e termine com "/api/"
+        if (!str_starts_with(self::$baseUri, 'https://')) {
+            self::$baseUri = str_replace('http://', 'https://', self::$baseUri);
+        }
+
+        // Se a URL não terminar com "/api/", adiciona automaticamente
+        if (!str_ends_with(self::$baseUri, '/api/')) {
+            self::$baseUri = rtrim(self::$baseUri, '/') . '/api/';
+        }
+
+        // Inicializa as opções do HttpClient
         $options = [
-            'base_uri' => $httpsUri,
-            'verify' => false,
+            'base_uri' => self::$baseUri,
+            'verify'   => false, // ⚠ Desativa verificação SSL (útil para testes, mas ative em produção)
         ];
+
     
         if (!is_null($extras)) {
             $options = array_merge($options, $extras);
@@ -142,6 +171,50 @@ class Client
      * @psalm-suppress InvalidNullableReturnType
      */
     public function request($method, $uri, $options = [])
+    {
+        try {
+            // Construir a URL completa
+            $queryString = isset($options['query']) ? '?' . http_build_query($options['query']) : '';
+            $fullUrl = rtrim(self::$baseUri, '/') . '/' . ltrim($uri, '/') . $queryString;
+    
+            // Debug: Log da URL completa antes da requisição
+            $this->logger->info("Enviando requisição: $method $uri e $fullUrl", ['options' => $options]);
+
+            $response = $this->http->request(
+                $method,
+                $uri,
+                RequestHandler::bindApiKeyToBasicAuth(
+                    $options,
+                    $this->apiKey
+                )
+            );
+    
+            $this->logger->info("Resposta recebida: ", ['body' => (string)$response->getBody()]);
+    
+            return ResponseHandler::success((string)$response->getBody());
+        } catch (InvalidJsonException $exception) {
+            $this->logger->error("IJsonE - Erro na requisição: " . $exception->getMessage());
+            throw $exception;
+        } catch (ClientException $exception) {
+            $this->logger->error("CE - Erro na requisição: " . $exception->getMessage());
+            ResponseHandler::failure($exception);
+        } catch (\Exception $exception) {
+            $this->logger->error("Erro na requisição: " . $exception->getMessage());
+            throw $exception;
+        }
+    }    
+
+    /**
+     * @param string $method
+     * @param string $uri
+     * @param array $options
+     *
+     * @throws \Banking\Exceptions\BankingException
+     * @return \ArrayObject
+     *
+     * @psalm-suppress InvalidNullableReturnType
+     */
+    public function requestOld($method, $uri, $options = [])
     {
         try {
             $response = $this->http->request(
