@@ -1,17 +1,34 @@
 <?php
 
-    $token = null; // "ktuXDHrbK2uOCUJUBaYmiCczwcvud1Rd";
+    namespace Banking;
 
-    return [
+    use Banking\Logger;
 
-        'token' => $token,
+    class Config
+    {
+        private static ?Config $instance = null;
 
-        'base_url' => 'https://bank.malipay.com.br/api/',
-        //'base_url' => 'http://bank.test/api/',
+        private ?Logger $logger = null;
 
-        'userAgent' => 'Seven',
+        public ?string $baseURL = 'https://bank.malipay.com.br/';
 
-    ];
+        public ?string $userAgent = 'KSeven';
 
+        // Impede instância externa
+        private function __construct()
+        {
+            $this->logger = new Logger("BankingClient"); // Inicializa o Logger
+            if ($this->baseURL === null) {
+                $this->logger->error('Oops, a BaseURL é obrigatória.');
+            }
+        }
 
+        public static function getInstance(): Config
+        {
+            if (self::$instance === null) {
+                self::$instance = new Config();
+            }
+            return self::$instance;
+        }
 
+    }
